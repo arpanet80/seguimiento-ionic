@@ -1,0 +1,7 @@
+{
+  "name": "seguimiento",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone"
+}
