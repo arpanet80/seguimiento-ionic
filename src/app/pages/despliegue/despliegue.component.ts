@@ -1,9 +1,14 @@
 import { animation } from '@angular/animations';
 import { AfterViewInit, Component, ElementRef, OnDestroy, Renderer2, ViewChild, inject } from '@angular/core';
+import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 import { WayPoint } from 'src/app/core/interfaces';
 import { Recinto } from 'src/app/core/interfaces/tecnico.interface';
 import { HeaderComponent } from 'src/app/core/pages/header/header.component';
 import { ApiService } from 'src/app/core/services/api.service';
+import { Geolocation } from '@capacitor/geolocation';
+import { Capacitor } from '@capacitor/core';
+import { NotificationsService } from 'src/app/core/services';
+import { AndroidSettings, IOSSettings, NativeSettings } from 'capacitor-native-settings';
 
 declare var google: any;
 
@@ -18,6 +23,8 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
 
   private renderer = inject(Renderer2);
   private apiService = inject( ApiService );
+  private notifics = inject(NotificationsService);
+  private locationAccuracy = inject( LocationAccuracy );
 
   @ViewChild('map', {static: true}) mapElementRef!: ElementRef;
 
@@ -25,6 +32,7 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
   marker: any;
   mapListener: any;
   markerListener: any;
+  // mapEl: any;
 
   directionsService = new google.maps.DirectionsService;
   directionsDisplay = new google.maps.DirectionsRenderer;
@@ -52,12 +60,87 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
 
       this.addMarker(this.tribunalElectoralPoint);
 
-
-
+      this.getCurrentLocation();
 
     });
 
   }
+
+
+  async getCurrentLocation() {
+    try {
+
+      const permissionStatus = await Geolocation.checkPermissions();
+      console.log('Permission status: ', permissionStatus.location);
+
+      if(permissionStatus?.location != 'granted') {
+
+        const requestStatus = await Geolocation.requestPermissions();
+
+        if(requestStatus.location != 'granted') {
+          // go to location settings
+          await this.openSettings(true);
+          return;
+        }
+      }
+
+      if(Capacitor.getPlatform() == 'android') {
+        this.enableGps();
+      }
+
+      let options: PositionOptions = {
+        maximumAge: 3000,
+        timeout: 10000,
+        enableHighAccuracy: true
+      };
+
+      const position = await Geolocation.getCurrentPosition(options);
+      console.log(position);
+
+      this.notifics.showToast("Posicion estabecida");
+
+      // this.loadMap();
+      this.renderer.addClass(this.mapElementRef.nativeElement, 'visible');
+
+      // this.map.setCenter( new this.googleMaps.LatLng({lat: position.coords.latitude, lng: position.coords.longitude }));
+
+      // this.watchPosition() ;
+
+
+    } catch(e: any) {
+      if(e?.message == 'Location services are not enabled') {
+        await this.openSettings();
+      }
+      console.log(e);
+    }
+  }
+
+  watchPosition() {
+    const wait = Geolocation.watchPosition({}, (position, err) => {
+      this.notifics.showToast("Cambio posicion...");
+    })
+  }
+
+  openSettings(app = false) {
+
+    this.notifics.showAlertOk('Permiso requerido', 'Atencion', 'Para utilizar la App requiere conceder permisos de GPS');
+    console.log('open settings...');
+
+    return NativeSettings.open({
+      optionAndroid: app ? AndroidSettings.ApplicationDetails : AndroidSettings.Location,
+      optionIOS: app ? IOSSettings.App : IOSSettings.LocationServices
+    });
+
+  }
+
+
+  async enableGps() {
+    const canRequest = await this.locationAccuracy.canRequest();
+    if(canRequest) {
+      await this.locationAccuracy.request(this.locationAccuracy.REQUEST_PRIORITY_HIGH_ACCURACY);
+    }
+  }
+
 
   async singleMap() {
 
@@ -67,7 +150,7 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
         mapId: "4504f8b37365c3d0",
         disableDefaultUI: true,          // Esconde el controlador de zoom del mapa
     }
-    this.map = new google.maps.Map(this.mapElementRef.nativeElement, mapOptions);
+    this.map = new google.maps.Map(this.mapElementRef.nativeElement.nativeElement, mapOptions);
     this.renderer.addClass(this.mapElementRef.nativeElement, 'visible');
 
     var directionsService = new google.maps.DirectionsService();
