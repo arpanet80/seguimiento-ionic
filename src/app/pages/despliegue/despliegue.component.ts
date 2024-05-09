@@ -98,11 +98,15 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
       console.log(position);
 
       this.notifics.showToast("Posicion estabecida");
+      this.notifics.showToast(position.coords.latitude);
 
       // this.loadMap();
       this.renderer.addClass(this.mapElementRef.nativeElement, 'visible');
 
-      // this.map.setCenter( new this.googleMaps.LatLng({lat: position.coords.latitude, lng: position.coords.longitude }));
+      this.addMarker({lat: -19.585408371224812, lng: -65.74314635392408 });
+
+      //this.addMarcador(position.coords.latitude, position.coords.longitude);
+      // this.map.setCenter( new google.LatLng({lat: position.coords.latitude, lng: position.coords.longitude }));
 
       // this.watchPosition() ;
 
@@ -114,7 +118,15 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
       console.log(e);
     }
   }
-
+/*
+  addMarcador(latitud: number, longitud: number) {
+    return new google.Marker({
+      position: new google.LatLng({lat: latitud, lng: longitud }),
+      map: this.map,
+      title: 'Aqui estoy'
+    });
+  }
+*/
   watchPosition() {
     const wait = Geolocation.watchPosition({}, (position, err) => {
       this.notifics.showToast("Cambio posicion...");

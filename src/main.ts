@@ -7,6 +7,7 @@ import { routes } from './app/app.routes';
 import { AppComponent } from './app/app.component';
 import { environment } from './environments/environment';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
+import { LocationAccuracy } from '@awesome-cordova-plugins/location-accuracy/ngx';
 
 if (environment.production) {
   enableProdMode();
@@ -15,6 +16,7 @@ if (environment.production) {
 bootstrapApplication(AppComponent, {
   providers: [
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    LocationAccuracy,
     provideHttpClient(withInterceptors([  ])),
     provideIonicAngular(),
     provideRouter(routes),
