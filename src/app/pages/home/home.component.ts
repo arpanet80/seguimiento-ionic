@@ -22,17 +22,17 @@ import { HeaderComponent } from 'src/app/core/pages/header/header.component';
 })
 export class HomeComponent { //} implements OnInit {
 
-  private route = inject( Router );
+  private router = inject( Router );
 
   constructor() { }
 
   // ngOnInit() {}
 
   features: any[] = [
-    {id: 1, name: 'Inicio', src: 'assets/icons/top-up.png', background: '#E2E9F1', ruta: '/pages/home'},
-    {id: 2, name: 'Marcadores', src: 'assets/icons/cash-withdrawal.png', background: '#E2E9F1', ruta: '/pages/map'},
-    {id: 3, name: 'Ruta Optima', src: 'assets/icons/send.png', background: '#E2E9F1', ruta: '/pages/rutas'},
-    {id: 4, name: 'Tracking de Ubicacion', src: 'assets/icons/debit-card.png', background: '#E2E9F1', ruta: '/pages/tracking'},
+    {id: 1, name: 'Inicio', src: 'assets/icons/cash-withdrawal.png', background: '#E2E9F1', ruta: '/pages/home'},
+    {id: 2, name: 'Despliegue', src: 'assets/icons/send.png', background: '#E2E9F1', ruta: '/pages/despliegue'},
+    {id: 3, name: 'Configuracion', src: 'assets/icons/top-up.png', background: '#E2E9F1', ruta: '/pages/config'},
+    // {id: 4, name: 'Tracking de Ubicacion', src: 'assets/icons/debit-card.png', background: '#E2E9F1', ruta: '/pages/tracking'},
   ];
 
   transactions: any[] = [
@@ -41,14 +41,15 @@ export class HomeComponent { //} implements OnInit {
   ];
 
 
-  btnMenu() {
-    alert("Aaaa");
+  btnSesion() {
+    // alert("Iniciar Sesion");
+    this.router.navigate(['/pages/login']);
 
   }
 
   nextpage( ruta: string) {
     console.log(ruta);
-    this.route.navigate([ruta]);
+    this.router.navigate([ruta]);
 
   }
 

@@ -30,11 +30,9 @@ export class AppComponent implements OnInit  {
 
   public appPages = [
     { title: 'Inicio', url: '/pages/home', icon: 'archive' },
-    { title: 'Marcadores', url: '/pages/despliegue', icon: 'mail' },
-    { title: 'config', url: '/pages/config', icon: 'paper-plane' },
+    { title: 'Despliegue', url: '/pages/despliegue', icon: 'paper-plane' },
+    { title: 'Configuracion', url: '/pages/config', icon: 'settings' },
   ];
-
-  // public labels = ['Family', 'Friends', 'Notes'];
 
   constructor(@Optional() private routerOutlet?: IonRouterOutlet) {
     //https://ionic.io/ionicons/v4
@@ -55,7 +53,7 @@ export class AppComponent implements OnInit  {
         }
 
         // this.networkStatus = status;
-        console.log('Network status Appcomponent:', status);
+        // console.log('Network status Appcomponent:', status);
       })
     }
 

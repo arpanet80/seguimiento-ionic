@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { AlertController, IonApp, IonRouterOutlet, Platform, ToastController } from '@ionic/angular/standalone';
 
 @Injectable({
@@ -8,6 +9,8 @@ export class NotificationsService {
 
   private toastCtrl = inject(ToastController);
   public alertController  = inject( AlertController);
+  private router = inject( Router );
+
 
   constructor() { }
 
@@ -16,7 +19,7 @@ export class NotificationsService {
       message: message,
       duration: 3000,
       position: 'bottom',
-      icon:  "logo-ionic",
+      // icon:  "logo-ionic",
       // color: 'primary'
     });
     toast.present();
@@ -30,6 +33,32 @@ export class NotificationsService {
       buttons: ['OK']
     });
 
+    await alert.present();
+  }
+
+  async showAlertConfirm() {
+    const alert = await this.alertController.create({
+      // cssClass: 'my-custom-class',
+      header: 'Error',
+      message: 'Error en la peticion HTTP',
+      buttons: [
+        /*{
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'secondary',
+          handler: (blah) => {
+            console.log('Confirm Cancel: blah');
+          }
+        }, */
+        {
+          text: 'Ok',
+          handler: () => {
+            this.router.navigate(['/']);
+          }
+        }
+      ],
+      backdropDismiss: false,
+    });
     await alert.present();
   }
 

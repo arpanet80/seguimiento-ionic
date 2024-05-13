@@ -9,6 +9,8 @@ import { Geolocation } from '@capacitor/geolocation';
 import { Capacitor } from '@capacitor/core';
 import { NotificationsService } from 'src/app/core/services';
 import { AndroidSettings, IOSSettings, NativeSettings } from 'capacitor-native-settings';
+import { LoadingController } from '@ionic/angular';
+import { Router } from '@angular/router';
 
 declare var google: any;
 
@@ -25,6 +27,8 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
   private apiService = inject( ApiService );
   private notifics = inject(NotificationsService);
   private locationAccuracy = inject( LocationAccuracy );
+  private loadingController = inject( LoadingController );
+  private router = inject( Router );
 
   @ViewChild('map', {static: true}) mapElementRef!: ElementRef;
 
@@ -44,9 +48,12 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
 
   ngAfterViewInit() {
 
-    this.apiService.getTecnico(11).subscribe((res: any) => {
+    this.presentLoadingWithOptions()
 
+    this.apiService.getTecnico(11).subscribe((res: any) => {
       this.recintosTecnico = res.recintos;
+
+      this.loadingController.dismiss();
 
       console.log(this.recintosTecnico);
 
@@ -57,12 +64,19 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
       // this.singleMap();
 
       this.loadMap();
+      this.addMarker(this.tribunalElectoralPoint, 'assets/imgs/oep.png');
 
-      this.addMarker(this.tribunalElectoralPoint);
-
+      // Posicion actual
       this.getCurrentLocation();
 
-    });
+    },
+    (error: any) => {
+      console.log('Error ==> ', error.message);
+      this.loadingController.dismiss()
+      this.notifics.showAlertConfirm();
+    }
+
+  );
 
   }
 
@@ -90,25 +104,23 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
 
       let options: PositionOptions = {
         maximumAge: 3000,
-        timeout: 10000,
+        timeout: 30000,
         enableHighAccuracy: true
       };
 
       const position = await Geolocation.getCurrentPosition(options);
-      console.log(position);
+
+      console.log("Posicion ==> ", position);
 
       this.notifics.showToast("Posicion estabecida");
-      this.notifics.showToast(position.coords.latitude);
+      // this.notifics.showToast(position.coords.latitude);
 
-      // this.loadMap();
       this.renderer.addClass(this.mapElementRef.nativeElement, 'visible');
 
-      this.addMarker({lat: -19.585408371224812, lng: -65.74314635392408 });
+      this.addMarker({lat: position.coords.latitude, lng: position.coords.longitude }, 'assets/imgs/location-here.png');
+      this.map.setCenter({lat: position.coords.latitude, lng: position.coords.longitude });
 
-      //this.addMarcador(position.coords.latitude, position.coords.longitude);
-      // this.map.setCenter( new google.LatLng({lat: position.coords.latitude, lng: position.coords.longitude }));
-
-      // this.watchPosition() ;
+      this.watchPosition() ;
 
 
     } catch(e: any) {
@@ -118,18 +130,11 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
       console.log(e);
     }
   }
-/*
-  addMarcador(latitud: number, longitud: number) {
-    return new google.Marker({
-      position: new google.LatLng({lat: latitud, lng: longitud }),
-      map: this.map,
-      title: 'Aqui estoy'
-    });
-  }
-*/
+
   watchPosition() {
     const wait = Geolocation.watchPosition({}, (position, err) => {
-      this.notifics.showToast("Cambio posicion...");
+      // this.marker.map = null;
+      this.notifics.showToast("Cambio posicion...  " + position?.coords.latitude + "  " + position?.coords.longitude);
     })
   }
 
@@ -183,7 +188,6 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
         directionsRenderer.setDirections(result);
       }
     });
-
   }
 
 
@@ -207,7 +211,6 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
       });
       this.renderer.addClass(mapEl, 'visible');
 
-
       this.calculateRoute();
 
       // this.addMarker(this.tribunalElectoralPoint);
@@ -223,11 +226,11 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
     }
   }
 
-  private calculateRoute() {
+  async  calculateRoute() {
 
     this.directionsDisplay.setMap(this.map);
 
-    this.directionsService.route({
+    await this.directionsService.route({
       origin:             this.tribunalElectoralPoint,
       destination:        this.tribunalElectoralPoint,
       waypoints:          this.puntosDeRuta,
@@ -243,15 +246,15 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
     });
   }
 
-  async addMarker(location: any) {
+  async addMarker(location: any, icon: string) {
 
     const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
 
     /// Configura el icono ////////////////
     const markerIcon = document.createElement('img');
-    markerIcon.src = 'assets/imgs/oep.png';
-    markerIcon.height = 50;
-    markerIcon.width = 50;
+    markerIcon.src = icon; /// 'assets/imgs/oep.png';
+    markerIcon.height = 40;
+    markerIcon.width = 40;
 
     ////// Aplica el arquer //////////
     this.marker = new AdvancedMarkerElement({
@@ -267,9 +270,16 @@ export class DespliegueComponent implements AfterViewInit, OnDestroy { //}  impl
       console.log("Click en marcador:", event.latLng.lat());
     });
 
+  }
 
+  async presentLoadingWithOptions() {
+    const loading = await this.loadingController.create({
+      message: 'Esperando respuesta...',
+      // translucent: true,
+      // cssClass: 'custom-class custom-loading'
+    });
 
-
+    return await loading.present();
   }
 
   ngOnDestroy(): void {
